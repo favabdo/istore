@@ -627,18 +627,7 @@ export default function App() {
   }, [selectedCategory, allProducts, searchQuery, categorySort]);
   
   // Cart States
-  const [cartItems, setCartItems] = useState<CartItem[]>([
-    {
-      product: PRODUCTS[0], // iPhone 15 Pro Max
-      quantity: 1,
-      selectedColor: 'Natural Titanium'
-    },
-    {
-      product: PRODUCTS[4], // AirPods Pro 2
-      quantity: 1,
-      selectedColor: 'White'
-    }
-  ]);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   
   // Favorites State
@@ -688,7 +677,7 @@ export default function App() {
   }, [cartItems]);
 
   const cartTotal = useMemo(() => {
-    return cartItems.reduce((acc, item) => acc + (item.product.price * item.quantity), 0);
+    return cartItems.reduce((acc, item) => acc + ((item.product?.price ?? 0) * item.quantity), 0);
   }, [cartItems]);
 
   // Toggle Favorite
