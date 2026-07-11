@@ -909,9 +909,6 @@ export default function App() {
                   </span>
                 </button>
 
-                  )}
-                </button>
-
               </div>
 
             </div>
@@ -1088,8 +1085,6 @@ export default function App() {
                 <span className="absolute -top-0.5 -left-0.5 w-4 h-4 bg-blue-600 text-[8px] text-white font-extrabold flex items-center justify-center rounded-full shadow-md active-dot-glow animate-bounce">
                   {cartCount}
                 </span>
-              </button>
-
               </button>
 
             </div>
