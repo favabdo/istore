@@ -24,7 +24,7 @@ import {
   Settings,
   Edit3
 } from 'lucide-react';
-import { GUARANTEES, BOTTOM_FEATURES } from './data';
+import { CATEGORIES as DEFAULT_CATEGORIES, GUARANTEES, BOTTOM_FEATURES } from './data';
 import { Product, Category, CartItem } from './types';
 import { useStoreData } from './hooks/useStoreData';
 
@@ -142,7 +142,9 @@ export default function App() {
   const [categorySort, setCategorySort] = useState('default');
 
   // Live product & category data coming from Supabase (shared with the admin app)
-  const { products: PRODUCTS, categories: CATEGORIES, loading: storeLoading, error: storeError } = useStoreData();
+  const { products: PRODUCTS, categories: fetchedCategories, loading: storeLoading, error: storeError } = useStoreData();
+  // Until the admin adds categories in Supabase, keep showing the original category images/section
+  const CATEGORIES = fetchedCategories.length > 0 ? fetchedCategories : DEFAULT_CATEGORIES;
 
   // Admin Security States
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(() => {
@@ -209,7 +211,6 @@ export default function App() {
     { id: 'iphone', label: 'ايفون', action: () => { setActiveTab('home'); setSelectedCategory('iphone'); } },
     { id: 'accessories', label: 'سماعات', action: () => { setActiveTab('home'); setSelectedCategory('accessories'); } },
     { id: 'watch', label: 'ساعات', action: () => { setActiveTab('home'); setSelectedCategory('watch'); } },
-    ...(isAdminLoggedIn ? [{ id: 'admin', label: 'لوحة التحكم', action: () => { setActiveTab('admin'); setSelectedCategory(null); } }] : []),
   ];
 
   const isTabActive = (id: string) => {
@@ -629,6 +630,7 @@ export default function App() {
   // Cart States
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
   
   // Favorites State
   const [favorites, setFavorites] = useState<string[]>(['iphone-15-pro-max']);
@@ -872,9 +874,7 @@ export default function App() {
 
                 {/* Heart (Favorites) Badge */}
                 <button 
-                  onClick={() => {
-                    alert(`المفضلة تحتوي على ${favorites.length} عناصر: ${favorites.map(f => PRODUCTS.find(p=>p.id===f)?.name || f).join(', ')}`);
-                  }}
+                  onClick={() => setIsFavoritesOpen(true)}
                   className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center hover:bg-white/30 text-slate-800 transition-colors relative"
                   title="المفضلة"
                 >
@@ -1042,17 +1042,7 @@ export default function App() {
 
               {/* Heart (Favorites) Badge */}
               <button 
-                onClick={() => {
-                  if (favorites.length === 0) {
-                    showToast('قائمة المفضلة فارغة حالياً.', 'info');
-                  } else {
-                    const names = favorites.map(f => {
-                      const prod = PRODUCTS.find(p => p.id === f) || customProducts.find(p => p.id === f);
-                      return prod ? prod.arabicName : f;
-                    }).join('، ');
-                    showToast(`المفضلة تحتوي على ${favorites.length} عناصر: ${names}`, 'info');
-                  }
-                }}
+                onClick={() => setIsFavoritesOpen(true)}
                 className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center hover:bg-white/30 text-slate-800 transition-colors relative"
                 title="المفضلة"
               >
@@ -1790,14 +1780,8 @@ export default function App() {
               <div className="glass-panel rounded-3xl p-16 text-center border border-white/30 max-w-lg mx-auto mt-8 font-sans" dir="rtl">
                 <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 font-black text-2xl">📦</div>
                 <h3 className="text-xl font-black text-slate-900">لا توجد منتجات حالياً</h3>
-                <p className="text-slate-500 font-semibold text-xs mt-2">لم يتم إضافة أي منتجات لهذا القسم حتى الآن. يمكنك إضافتها بسهولة من لوحة التحكم!</p>
+                <p className="text-slate-500 font-semibold text-xs mt-2">لم يتم إضافة أي منتجات لهذا القسم حتى الآن.</p>
                 <div className="flex items-center justify-center gap-4 mt-6">
-                  <button 
-                    onClick={() => { setActiveTab('admin'); setSelectedCategory(null); }}
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-6 py-3 rounded-xl shadow-md transition-all hover:scale-105 active:scale-95"
-                  >
-                    الذهاب للوحة التحكم
-                  </button>
                   <button 
                     onClick={() => setSelectedCategory(null)}
                     className="bg-white border border-slate-200 text-slate-700 font-bold text-xs px-6 py-3 rounded-xl hover:bg-slate-50 transition-colors"
@@ -2386,19 +2370,6 @@ export default function App() {
 
               </div>
 
-              {/* Discreet Admin Portal Entry */}
-              <div className="flex justify-center mt-6 border-t border-slate-100 pt-4">
-                <button 
-                  onClick={() => {
-                    setActiveTab('admin');
-                    setSelectedCategory(null);
-                  }}
-                  className="text-[10px] text-slate-400 hover:text-[#c09d53] font-bold transition-all duration-300 flex items-center gap-1 opacity-40 hover:opacity-100 cursor-pointer"
-                >
-                  <Lock className="w-2.5 h-2.5" />
-                  <span>بوابة الإدارة للمسؤولين فقط</span>
-                </button>
-              </div>
             </div>
           </footer>
         )}
@@ -2521,6 +2492,83 @@ export default function App() {
               </div>
             )}
 
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================================
+          SLIDING SIDE FAVORITES DRAWER (same experience as the cart drawer)
+          ========================================================================================= */}
+      {isFavoritesOpen && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 transition-opacity flex justify-end">
+          <div 
+            className="w-full max-w-md h-full bg-white/80 backdrop-blur-xl border-r border-white/20 shadow-2xl p-6 flex flex-col justify-between"
+            dir="rtl"
+          >
+            <div>
+              <div className="flex items-center justify-between pb-4 border-b border-slate-200">
+                <div className="flex items-center gap-2">
+                  <Heart className="w-6 h-6 fill-rose-500 text-rose-500" />
+                  <h3 className="font-black text-xl text-slate-900">قائمة المفضلة</h3>
+                </div>
+                <button 
+                  onClick={() => setIsFavoritesOpen(false)}
+                  className="w-8 h-8 rounded-full hover:bg-slate-200/50 flex items-center justify-center text-slate-600 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {(() => {
+                const favoriteProducts = allProducts.filter(p => favorites.includes(p.id));
+                return favoriteProducts.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-24 text-center">
+                    <Heart className="w-16 h-16 text-slate-300 mb-4" />
+                    <p className="text-slate-500 font-bold">قائمة المفضلة فارغة حالياً</p>
+                    <button 
+                      onClick={() => setIsFavoritesOpen(false)}
+                      className="mt-4 bg-blue-600 text-white font-bold text-xs px-6 py-2.5 rounded-xl hover:bg-blue-700 transition-colors"
+                    >
+                      متابعة التسوق
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4 mt-6 max-h-[65vh] overflow-y-auto no-scrollbar pr-1">
+                    {favoriteProducts.map(product => (
+                      <div 
+                        key={product.id}
+                        className="glass-panel rounded-2xl p-4 flex items-center justify-between gap-4 border border-slate-100"
+                      >
+                        <div className="w-16 h-16 rounded-xl bg-slate-100/60 overflow-hidden relative border border-slate-200 flex items-center justify-center">
+                          <img src={product.image} alt={product.name} className="w-12 h-12 object-cover" />
+                        </div>
+
+                        <div className="flex-1 text-right">
+                          <h4 className="font-extrabold text-sm text-slate-900">{product.arabicName}</h4>
+                          <p className="text-blue-600 text-xs font-black mt-1">{product.price.toLocaleString()} EGP</p>
+                        </div>
+
+                        <div className="flex flex-col items-end gap-2">
+                          <button 
+                            onClick={() => { addToCart(product); setIsFavoritesOpen(false); setIsCartOpen(true); }}
+                            className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] px-3 py-2 rounded-lg transition-colors"
+                          >
+                            أضف للسلة
+                          </button>
+                          <button 
+                            onClick={() => toggleFavorite(product.id)}
+                            className="text-rose-500 hover:text-rose-600 font-bold text-[10px] flex items-center gap-0.5"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                            <span>إزالة</span>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
           </div>
         </div>
       )}
