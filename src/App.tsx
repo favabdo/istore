@@ -1817,7 +1817,7 @@ export default function App() {
 
                       {/* Product image */}
                       <div 
-                        className="w-full h-56 relative overflow-hidden bg-slate-50/20 flex items-center justify-center p-4 border-b border-white/10 group/img"
+                        className="w-full h-56 relative overflow-hidden bg-slate-50/20 border-b border-white/10 group/img"
                         onClick={() => {
                           setSelectedProduct(prod);
                           setModalColor(activeColorName);
@@ -1826,7 +1826,7 @@ export default function App() {
                         <img 
                           src={activeImg || '/input_file_2.png'} 
                           alt={prod.arabicName}
-                          className="max-h-full max-w-full object-contain rounded-2xl group-hover:scale-105 transition-transform duration-500"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           style={activeImg === "/input_file_2.png" ? { 
                             objectPosition: `${prodIndex >= 0 ? prodIndex * 25 : 0}% center`
                           } : {}}
