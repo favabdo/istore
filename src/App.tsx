@@ -2429,39 +2429,40 @@ export default function App() {
       {isCartOpen && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 transition-opacity flex justify-end">
           <div 
-            className="w-full max-w-md h-full bg-white/80 backdrop-blur-xl border-r border-white/20 shadow-2xl p-6 flex flex-col justify-between"
+            className="w-full max-w-md h-full bg-white/80 backdrop-blur-xl border-r border-white/20 shadow-2xl p-6 flex flex-col overflow-hidden"
             dir="rtl"
           >
-            {/* Cart Header */}
-            <div>
-              <div className="flex items-center justify-between pb-4 border-b border-slate-200">
-                <div className="flex items-center gap-2">
-                  <ShoppingCart className="w-6 h-6 text-blue-600" />
-                  <h3 className="font-black text-xl text-slate-900">حقيبة المشتريات</h3>
-                </div>
+            {/* Cart Header (always pinned to the top) */}
+            <div className="flex items-center justify-between pb-4 border-b border-slate-200 flex-shrink-0">
+              <div className="flex items-center gap-2">
+                <ShoppingCart className="w-6 h-6 text-blue-600" />
+                <h3 className="font-black text-xl text-slate-900">حقيبة المشتريات</h3>
+              </div>
+              <button 
+                onClick={() => setIsCartOpen(false)}
+                className="w-8 h-8 rounded-full hover:bg-slate-200/50 flex items-center justify-center text-slate-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* List of Cart Items (this is the ONLY part that scrolls, and it always
+                fills exactly the remaining space between header and footer, so
+                scrolling with the mouse always reaches the real end of the list) */}
+            {cartItems.length === 0 ? (
+              <div className="flex-1 flex flex-col items-center justify-center text-center">
+                <ShoppingCart className="w-16 h-16 text-slate-300 mb-4" />
+                <p className="text-slate-500 font-bold">الحقيبة فارغة حالياً</p>
                 <button 
                   onClick={() => setIsCartOpen(false)}
-                  className="w-8 h-8 rounded-full hover:bg-slate-200/50 flex items-center justify-center text-slate-600 transition-colors"
+                  className="mt-4 bg-blue-600 text-white font-bold text-xs px-6 py-2.5 rounded-xl hover:bg-blue-700 transition-colors"
                 >
-                  <X className="w-5 h-5" />
+                  متابعة التسوق
                 </button>
               </div>
-
-              {/* List of Cart Items */}
-              {cartItems.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-24 text-center">
-                  <ShoppingCart className="w-16 h-16 text-slate-300 mb-4" />
-                  <p className="text-slate-500 font-bold">الحقيبة فارغة حالياً</p>
-                  <button 
-                    onClick={() => setIsCartOpen(false)}
-                    className="mt-4 bg-blue-600 text-white font-bold text-xs px-6 py-2.5 rounded-xl hover:bg-blue-700 transition-colors"
-                  >
-                    متابعة التسوق
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-4 mt-6 max-h-[60vh] overflow-y-auto no-scrollbar pr-1">
-                  {cartItems.map((item, i) => (
+            ) : (
+              <div className="flex-1 min-h-0 space-y-4 mt-6 overflow-y-auto no-scrollbar pr-1">
+                {cartItems.map((item, i) => (
                     <div 
                       key={`${item.product.id}-${item.selectedColor}-${i}`}
                       className="glass-panel rounded-2xl p-4 flex items-center justify-between gap-4 border border-slate-100"
@@ -2513,13 +2514,12 @@ export default function App() {
                       </div>
                     </div>
                   ))}
-                </div>
-              )}
-            </div>
+              </div>
+            )}
 
-            {/* Cart Summary & Checkout */}
+            {/* Cart Summary & Checkout (always pinned to the bottom) */}
             {cartItems.length > 0 && (
-              <div className="pt-6 border-t border-slate-200">
+              <div className="pt-6 border-t border-slate-200 flex-shrink-0">
                 <div className="flex items-center justify-between font-black text-slate-900 mb-4">
                   <span>المجموع الإجمالي:</span>
                   <span className="text-blue-600 text-lg">{cartTotal.toLocaleString()} EGP</span>
@@ -2549,39 +2549,38 @@ export default function App() {
       {isFavoritesOpen && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 transition-opacity flex justify-end">
           <div 
-            className="w-full max-w-md h-full bg-white/80 backdrop-blur-xl border-r border-white/20 shadow-2xl p-6 flex flex-col justify-between"
+            className="w-full max-w-md h-full bg-white/80 backdrop-blur-xl border-r border-white/20 shadow-2xl p-6 flex flex-col overflow-hidden"
             dir="rtl"
           >
-            <div>
-              <div className="flex items-center justify-between pb-4 border-b border-slate-200">
-                <div className="flex items-center gap-2">
-                  <Heart className="w-6 h-6 fill-rose-500 text-rose-500" />
-                  <h3 className="font-black text-xl text-slate-900">قائمة المفضلة</h3>
-                </div>
-                <button 
-                  onClick={() => setIsFavoritesOpen(false)}
-                  className="w-8 h-8 rounded-full hover:bg-slate-200/50 flex items-center justify-center text-slate-600 transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+            <div className="flex items-center justify-between pb-4 border-b border-slate-200 flex-shrink-0">
+              <div className="flex items-center gap-2">
+                <Heart className="w-6 h-6 fill-rose-500 text-rose-500" />
+                <h3 className="font-black text-xl text-slate-900">قائمة المفضلة</h3>
               </div>
+              <button 
+                onClick={() => setIsFavoritesOpen(false)}
+                className="w-8 h-8 rounded-full hover:bg-slate-200/50 flex items-center justify-center text-slate-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-              {(() => {
-                const favoriteProducts = allProducts.filter(p => favorites.includes(p.id));
-                return favoriteProducts.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-24 text-center">
-                    <Heart className="w-16 h-16 text-slate-300 mb-4" />
-                    <p className="text-slate-500 font-bold">قائمة المفضلة فارغة حالياً</p>
-                    <button 
-                      onClick={() => setIsFavoritesOpen(false)}
-                      className="mt-4 bg-blue-600 text-white font-bold text-xs px-6 py-2.5 rounded-xl hover:bg-blue-700 transition-colors"
-                    >
-                      متابعة التسوق
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-4 mt-6 max-h-[65vh] overflow-y-auto no-scrollbar pr-1">
-                    {favoriteProducts.map(product => (
+            {(() => {
+              const favoriteProducts = allProducts.filter(p => favorites.includes(p.id));
+              return favoriteProducts.length === 0 ? (
+                <div className="flex-1 flex flex-col items-center justify-center text-center">
+                  <Heart className="w-16 h-16 text-slate-300 mb-4" />
+                  <p className="text-slate-500 font-bold">قائمة المفضلة فارغة حالياً</p>
+                  <button 
+                    onClick={() => setIsFavoritesOpen(false)}
+                    className="mt-4 bg-blue-600 text-white font-bold text-xs px-6 py-2.5 rounded-xl hover:bg-blue-700 transition-colors"
+                  >
+                    متابعة التسوق
+                  </button>
+                </div>
+              ) : (
+                <div className="flex-1 min-h-0 space-y-4 mt-6 overflow-y-auto no-scrollbar pr-1">
+                  {favoriteProducts.map(product => (
                       <div 
                         key={product.id}
                         className="glass-panel rounded-2xl p-4 flex items-center justify-between gap-4 border border-slate-100"
@@ -2611,11 +2610,10 @@ export default function App() {
                           </button>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                );
-              })()}
-            </div>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}
