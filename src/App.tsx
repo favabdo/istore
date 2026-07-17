@@ -21,7 +21,8 @@ import {
   ExternalLink,
   Trash2,
   Settings,
-  Edit3
+  Edit3,
+  Mail
 } from 'lucide-react';
 import { CATEGORIES as DEFAULT_CATEGORIES, GUARANTEES, BOTTOM_FEATURES } from './data';
 import { Product, Category, CartItem } from './types';
@@ -2405,6 +2406,41 @@ export default function App() {
             </div>
           </footer>
         )}
+
+        {/* =========================================================================================
+            DEVELOPER CREDIT + CONTACT (always at the very bottom of the page)
+            ========================================================================================= */}
+        <div className="w-full mt-10 mb-4 flex flex-col items-center gap-3 text-center" dir="rtl">
+          <p className="text-slate-500 text-xs sm:text-sm font-semibold">
+            Website by <span className="font-black text-slate-700">Abdullah Elsawy</span>
+          </p>
+          <div className="flex items-center gap-6">
+            <a
+              href="https://wa.me/201061163091"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex flex-col items-center gap-1.5 group"
+            >
+              <span className="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300">
+                <MessageCircle className="w-5 h-5" />
+              </span>
+              <span className="text-[11px] font-bold text-slate-500 group-hover:text-green-600 transition-colors" dir="ltr">
+                01061163091
+              </span>
+            </a>
+            <a
+              href="mailto:abdallah666mo@gmail.com"
+              className="flex flex-col items-center gap-1.5 group"
+            >
+              <span className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300">
+                <Mail className="w-5 h-5" />
+              </span>
+              <span className="text-[11px] font-bold text-slate-500 group-hover:text-blue-600 transition-colors" dir="ltr">
+                abdallah666mo@gmail.com
+              </span>
+            </a>
+          </div>
+        </div>
 
       </div>
 
