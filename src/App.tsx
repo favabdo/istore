@@ -21,8 +21,7 @@ import {
   ExternalLink,
   Trash2,
   Settings,
-  Edit3,
-  Mail
+  Edit3
 } from 'lucide-react';
 import { CATEGORIES as DEFAULT_CATEGORIES, GUARANTEES, BOTTOM_FEATURES } from './data';
 import { Product, Category, CartItem } from './types';
@@ -30,6 +29,8 @@ import { useStoreData } from './hooks/useStoreData';
 
 // Premium high-end brand asset imports (including logo & 3D background elements)
 import logoImg from './tecstore-logo.png';
+import whatsappLogo from './whatsapp-logo.png';
+import gmailLogo from './gmail-logo.png';
 import img5 from './5-Photoroom.png';
 import img6 from './6-Photoroom.png';
 import img8 from './8.png';
@@ -2421,8 +2422,8 @@ export default function App() {
               rel="noopener noreferrer"
               className="flex flex-col items-center gap-1.5 group"
             >
-              <span className="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300">
-                <MessageCircle className="w-5 h-5" />
+              <span className="w-11 h-11 rounded-full bg-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300 p-1.5 border border-slate-100">
+                <img src={whatsappLogo} alt="WhatsApp" className="w-full h-full object-contain" />
               </span>
               <span className="text-[11px] font-bold text-slate-500 group-hover:text-green-600 transition-colors" dir="ltr">
                 01061163091
@@ -2432,8 +2433,8 @@ export default function App() {
               href="mailto:abdallah666mo@gmail.com"
               className="flex flex-col items-center gap-1.5 group"
             >
-              <span className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300">
-                <Mail className="w-5 h-5" />
+              <span className="w-11 h-11 rounded-full bg-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300 p-1.5 border border-slate-100">
+                <img src={gmailLogo} alt="Gmail" className="w-full h-full object-contain" />
               </span>
               <span className="text-[11px] font-bold text-slate-500 group-hover:text-blue-600 transition-colors" dir="ltr">
                 abdallah666mo@gmail.com
