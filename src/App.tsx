@@ -662,27 +662,21 @@ export default function App() {
   // Video Playing Overlay state
   const [isVideoOpen, setIsVideoOpen] = useState(false);
 
-  // Lock background scroll whenever any overlay/modal/drawer is open.
-  // Without this, the page behind a fixed overlay stays scrollable too, and on
-  // mobile browsers (especially iOS Safari) that fight over which layer "owns"
-  // the touch/scroll gesture is exactly what makes scrolling feel like it freezes.
+  // Ref to the single element that owns scrolling for the whole app (see .app-scroll in index.css)
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Lock the app's scroll container whenever any overlay/modal/drawer is open,
+  // so the page behind a fixed overlay can't scroll too. Since this is a plain
+  // div (not <body>), toggling its overflow is enough — no iOS position-fixed
+  // hack needed, and scroll position is preserved automatically.
   const isAnyOverlayOpen = isCartOpen || !!selectedProduct || isVideoOpen;
   React.useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
     if (isAnyOverlayOpen) {
-      const scrollY = window.scrollY;
-      const { style } = document.body;
-      style.position = 'fixed';
-      style.top = `-${scrollY}px`;
-      style.left = '0';
-      style.right = '0';
-      style.width = '100%';
+      el.style.overflow = 'hidden';
       return () => {
-        style.position = '';
-        style.top = '';
-        style.left = '';
-        style.right = '';
-        style.width = '';
-        window.scrollTo(0, scrollY);
+        el.style.overflow = '';
       };
     }
   }, [isAnyOverlayOpen]);
@@ -922,7 +916,7 @@ export default function App() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden overflow-y-visible gradient-bg text-slate-800 font-sans pb-16 selection:bg-blue-200">
+    <div ref={scrollContainerRef} className="app-scroll relative overflow-x-hidden gradient-bg text-slate-800 font-sans pb-16 selection:bg-blue-200">
       
       {/* -------------------- FLOATING 3D GLASS BUBBLES BACKGROUND (Using User-Uploaded Assets) -------------------- */}
       {/* Upper Left 3D Glass Accent */}

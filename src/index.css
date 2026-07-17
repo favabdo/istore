@@ -4,13 +4,16 @@
   --font-sans: "Cairo", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
 }
 
-/* Smooth, non-janky scrolling on both the page and any inner scroll containers */
-html {
+/* html/body no longer scroll at all (see index.html) — this is the ONE and
+   ONLY element on the whole page allowed to scroll. That guarantees a single
+   scrollbar no matter what the browser/RTL does with html or body. */
+.app-scroll {
+  height: 100dvh;
+  overflow-y: auto;
+  overflow-x: hidden;
   scroll-behavior: smooth;
-}
-html, body {
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: none;
+  overscroll-behavior-y: contain;
 }
 /* Any internally-scrollable panel (drawers, modals, dropdowns) should keep its
    own scroll instead of "chaining" into the page behind it, which is a common
