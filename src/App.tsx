@@ -28,7 +28,7 @@ import { Product, Category, CartItem } from './types';
 import { useStoreData } from './hooks/useStoreData';
 
 // Premium high-end brand asset imports (including logo & 3D background elements)
-import logoImg from './571121285_799579552713444_3083899457598797698_n-Photoroom.png';
+import logoImg from './tecstore-logo.png';
 import img5 from './5-Photoroom.png';
 import img6 from './6-Photoroom.png';
 import img8 from './8.png';
@@ -670,7 +670,7 @@ export default function App() {
   // Chat Panel State
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<{sender: 'user' | 'support', text: string}[]>([
-    { sender: 'support', text: 'مرحباً بك في Sharkawy Group! كيف يمكننا مساعدتك اليوم؟' }
+    { sender: 'support', text: 'مرحباً بك في TecStore! كيف يمكننا مساعدتك اليوم؟' }
   ]);
   const [newMsg, setNewMsg] = useState('');
 
@@ -763,7 +763,7 @@ export default function App() {
       } else if (userMessage.includes('توصيل') || userMessage.includes('شحن')) {
         reply = 'الشحن لدينا سريع جداً ويوصلك في غضون 24 ساعة فقط لجميع المحافظات مع شحن آمن بالكامل.';
       } else if (userMessage.includes('ضمان') || userMessage.includes('اصلي')) {
-        reply = 'جميع منتجاتنا في Sharkawy Group أصلية 100٪ بضمان معتمد ورسمي من شركة Apple لمدة عام كامل.';
+        reply = 'جميع منتجاتنا في TecStore أصلية 100٪ بضمان معتمد ورسمي من شركة Apple لمدة عام كامل.';
       }
       setChatMessages(prev => [...prev, { sender: 'support', text: reply }]);
     }, 1000);
@@ -995,17 +995,17 @@ export default function App() {
             {/* Desktop Left / Mobile Top Row: Logo (Right) and Mobile Actions (Left) */}
             <div className="flex flex-row items-center justify-between w-full lg:w-auto lg:flex-shrink-0 z-10">
               
-              {/* Right: Custom Sharkawy Group Brand Logo */}
+              {/* Right: Custom TecStore Brand Logo */}
               <div className="flex items-center gap-1.5 sm:gap-2 cursor-pointer select-none flex-shrink-0" onClick={() => { setSelectedCategory(null); setSearchQuery(''); }}>
                 {/* Custom Logo Image with high-end premium branding */}
                 <img 
                   src={logoImg} 
-                  alt="Sharkawy Group Brand Logo" 
+                  alt="TecStore Brand Logo" 
                   className="h-8 xs:h-9 sm:h-10 md:h-11 w-auto object-contain transition-transform hover:scale-105 drop-shadow-[0_2px_6px_rgba(0,0,0,0.04)]"
                   referrerPolicy="no-referrer"
                 />
                 <div className="flex items-center">
-                  <span className="font-extrabold text-xs xs:text-sm sm:text-base md:text-lg tracking-tight text-slate-900 font-sans">Sharkawy Group</span>
+                  <span className="font-extrabold text-xs xs:text-sm sm:text-base md:text-lg tracking-tight text-slate-900 font-sans">TecStore</span>
                 </div>
               </div>
 
@@ -2373,7 +2373,7 @@ export default function App() {
                         <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-white/40 flex items-center justify-center text-slate-800 group-hover:scale-110 transition-transform duration-300 shadow-sm border border-white/50 p-1.5">
                           <img 
                             src={logoImg} 
-                            alt="Sharkawy Group Logo Icon" 
+                            alt="TecStore Logo Icon" 
                             className="w-full h-full object-contain pointer-events-none"
                             referrerPolicy="no-referrer"
                           />
@@ -2511,7 +2511,7 @@ export default function App() {
                 </div>
                 <button 
                   onClick={() => {
-                    alert(`شكراً لطلبك من Sharkawy Group! تم حجز الطلب بنجاح بمبلغ إجمالي ${cartTotal.toLocaleString()} EGP. سنقوم بالتواصل معك لتأكيد الشحن فوراً.`);
+                    alert(`شكراً لطلبك من TecStore! تم حجز الطلب بنجاح بمبلغ إجمالي ${cartTotal.toLocaleString()} EGP. سنقوم بالتواصل معك لتأكيد الشحن فوراً.`);
                     setCartItems([]);
                     setIsCartOpen(false);
                   }}
