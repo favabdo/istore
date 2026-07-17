@@ -922,7 +922,7 @@ export default function App() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden gradient-bg text-slate-800 font-sans pb-16 selection:bg-blue-200">
+    <div className="relative min-h-screen overflow-x-hidden overflow-y-visible gradient-bg text-slate-800 font-sans pb-16 selection:bg-blue-200">
       
       {/* -------------------- FLOATING 3D GLASS BUBBLES BACKGROUND (Using User-Uploaded Assets) -------------------- */}
       {/* Upper Left 3D Glass Accent */}
