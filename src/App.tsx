@@ -1826,7 +1826,9 @@ export default function App() {
                         <img 
                           src={activeImg || '/input_file_2.png'} 
                           alt={prod.arabicName}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          className={`w-full h-full group-hover:scale-105 transition-transform duration-500 ${
+                            activeImg === "/input_file_2.png" ? 'object-cover' : 'object-contain bg-white/40'
+                          }`}
                           style={activeImg === "/input_file_2.png" ? { 
                             objectPosition: `${prodIndex >= 0 ? prodIndex * 25 : 0}% center`
                           } : {}}
@@ -2211,7 +2213,9 @@ export default function App() {
                             <img 
                               src={activeImg} 
                               alt={prod.arabicName}
-                              className="w-full h-full object-cover rounded-3xl transition-transform duration-500 group-hover:scale-105"
+                              className={`w-full h-full rounded-3xl transition-transform duration-500 group-hover:scale-105 ${
+                                activeImg === "/input_file_2.png" ? 'object-cover' : 'object-contain bg-white/40'
+                              }`}
                               style={activeImg === "/input_file_2.png" ? { 
                                 objectPosition: `${prodIndex >= 0 ? prodIndex * 25 : 0}% center` 
                               } : {}}
@@ -2612,7 +2616,7 @@ export default function App() {
                       <img 
                         src={modalActiveImg} 
                         alt={selectedProduct.arabicName}
-                        className="w-full h-full max-h-[300px] object-contain transition-transform duration-500 group-hover/modalimg:scale-105"
+                        className="w-full h-full object-contain transition-transform duration-500 group-hover/modalimg:scale-105"
                         style={modalActiveImg === "/input_file_2.png" ? { 
                           objectPosition: `${PRODUCTS.findIndex(p => p.id === selectedProduct.id) * 25}% center`,
                           transform: 'scale(1.8)'
