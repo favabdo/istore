@@ -661,6 +661,31 @@ export default function App() {
   // Video Playing Overlay state
   const [isVideoOpen, setIsVideoOpen] = useState(false);
 
+  // Lock background scroll whenever any overlay/modal/drawer is open.
+  // Without this, the page behind a fixed overlay stays scrollable too, and on
+  // mobile browsers (especially iOS Safari) that fight over which layer "owns"
+  // the touch/scroll gesture is exactly what makes scrolling feel like it freezes.
+  const isAnyOverlayOpen = isCartOpen || isFavoritesOpen || !!selectedProduct || isVideoOpen;
+  React.useEffect(() => {
+    if (isAnyOverlayOpen) {
+      const scrollY = window.scrollY;
+      const { style } = document.body;
+      style.position = 'fixed';
+      style.top = `-${scrollY}px`;
+      style.left = '0';
+      style.right = '0';
+      style.width = '100%';
+      return () => {
+        style.position = '';
+        style.top = '';
+        style.left = '';
+        style.right = '';
+        style.width = '';
+        window.scrollTo(0, scrollY);
+      };
+    }
+  }, [isAnyOverlayOpen]);
+
   // Search Filtered Products
   const filteredProducts = useMemo(() => {
     return allProducts.filter(p => {
@@ -825,7 +850,7 @@ export default function App() {
           <div className="relative rounded-2xl px-3 sm:px-4 py-2 flex flex-col lg:flex-row lg:items-center justify-between gap-2.5 lg:gap-4 border border-white/55 min-h-[48px] sm:min-h-[56px] md:min-h-[62px]">
             
             {/* Isolated Gloss Glass Background Layer */}
-            <div className="absolute inset-0 rounded-2xl bg-white/25 backdrop-blur-3xl shadow-[0_15px_35px_-10px_rgba(0,0,0,0.06),inset_0_1px_1.5px_rgba(255,255,255,0.95),inset_0_8px_16px_rgba(255,255,255,0.15),inset_0_-8px_16px_rgba(0,0,0,0.005)] overflow-hidden pointer-events-none z-0">
+            <div className="absolute inset-0 rounded-2xl bg-white/25 backdrop-blur-2xl shadow-[0_15px_35px_-10px_rgba(0,0,0,0.06),inset_0_1px_1.5px_rgba(255,255,255,0.95),inset_0_8px_16px_rgba(255,255,255,0.15),inset_0_-8px_16px_rgba(0,0,0,0.005)] overflow-hidden pointer-events-none z-0">
               {/* Real Apple Glass Gloss/Shine Highlight Line */}
               <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/95 to-transparent z-10"></div>
               {/* Diagonal Reflection Glow mimicking high-end 3D physical glass sheet */}
@@ -2189,7 +2214,7 @@ export default function App() {
                       return (
                         <div 
                           key={prod.id}
-                          className="glass-card glass-shine rounded-3xl overflow-hidden cursor-pointer flex flex-col justify-between h-[180px] md:h-[200px] border border-white/30 hover:border-white/60 shadow-md group relative"
+                          className="glass-card glass-shine rounded-3xl overflow-hidden cursor-pointer flex flex-col justify-between h-[230px] md:h-[250px] border border-white/30 hover:border-white/60 shadow-md group relative"
                         >
                           {/* Favorite button (Absolute Top Left) */}
                           <button 
@@ -2204,7 +2229,7 @@ export default function App() {
 
                           {/* Slice Image of Product cards from input_file_2.png or custom images */}
                           <div 
-                            className="w-full h-full relative group/img overflow-hidden rounded-3xl"
+                            className="w-full flex-1 min-h-0 relative group/img overflow-hidden rounded-t-3xl"
                             onClick={() => {
                               setSelectedProduct(prod);
                               setModalColor(activeColorName);
@@ -2213,7 +2238,7 @@ export default function App() {
                             <img 
                               src={activeImg} 
                               alt={prod.arabicName}
-                              className={`w-full h-full rounded-3xl transition-transform duration-500 group-hover:scale-105 ${
+                              className={`w-full h-full rounded-t-3xl transition-transform duration-500 group-hover:scale-105 ${
                                 activeImg === "/input_file_2.png" ? 'object-cover' : 'object-contain bg-white/40'
                               }`}
                               style={activeImg === "/input_file_2.png" ? { 
@@ -2240,7 +2265,7 @@ export default function App() {
                                 </button>
 
                                 {/* Dot Indicators */}
-                                <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-black/25 backdrop-blur-xs px-1.5 py-0.5 rounded-full z-20">
+                                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-black/25 backdrop-blur-xs px-1.5 py-0.5 rounded-full z-20">
                                   {images.map((_, i) => (
                                     <span 
                                       key={i} 
@@ -2259,44 +2284,62 @@ export default function App() {
                                 عرض المواصفات والسعر
                               </span>
                             </div>
+
+                            {/* Interactive color circles overlay floating on the image */}
+                            <div className="absolute bottom-2 right-2 flex items-center gap-1 z-10 bg-white/60 backdrop-blur-md px-2 py-1 rounded-full shadow-sm border border-white/30">
+                              {prod.colors.slice(0, 4).map((col) => {
+                                const isColorSelected = activeColorName === col.name;
+                                return (
+                                  <button
+                                    key={col.name}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setProductCardColors({
+                                        ...productCardColors,
+                                        [prod.id]: col.name
+                                      });
+                                    }}
+                                    className={`w-3 h-3 rounded-full ${col.bgClass} transition-all duration-300 ${
+                                      isColorSelected 
+                                        ? 'ring-2 ring-blue-600 scale-125 shadow-sm' 
+                                        : 'hover:scale-110 opacity-70'
+                                    }`}
+                                    title={col.name}
+                                  />
+                                );
+                              })}
+                            </div>
+
+                            {/* Instant Add-to-cart small button */}
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                addToCart(prod, activeColorName);
+                              }}
+                              className="absolute bottom-2 left-2 w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700 hover:scale-110 transition-all z-10 shadow-md"
+                              title="أضف للسلة فوراً"
+                            >
+                              <Plus className="w-4 h-4 font-bold" />
+                            </button>
                           </div>
 
-                          {/* Interactive color circles overlay floating (or custom positioned) */}
-                          <div className="absolute bottom-3 right-3 flex items-center gap-1.5 z-10 bg-white/60 backdrop-blur-md px-2.5 py-1.5 rounded-full shadow-sm border border-white/30">
-                            {prod.colors.map((col) => {
-                              const isColorSelected = activeColorName === col.name;
-                              return (
-                                <button
-                                  key={col.name}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setProductCardColors({
-                                      ...productCardColors,
-                                      [prod.id]: col.name
-                                    });
-                                  }}
-                                  className={`w-3.5 h-3.5 rounded-full ${col.bgClass} transition-all duration-300 ${
-                                    isColorSelected 
-                                      ? 'ring-2 ring-blue-600 scale-125 shadow-sm' 
-                                      : 'hover:scale-110 opacity-70'
-                                  }`}
-                                  title={col.name}
-                                />
-                              );
-                            })}
-                          </div>
-
-                          {/* Instant Add-to-cart small button */}
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              addToCart(prod, activeColorName);
+                          {/* Name & price footer, visible on the closed card so shoppers know what they're about to open */}
+                          <div 
+                            className="px-3 py-2 flex flex-col gap-0.5 shrink-0"
+                            dir="rtl"
+                            onClick={() => {
+                              setSelectedProduct(prod);
+                              setModalColor(activeColorName);
                             }}
-                            className="absolute bottom-3 left-3 w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700 hover:scale-110 transition-all z-10 shadow-md"
-                            title="أضف للسلة فوراً"
                           >
-                            <Plus className="w-4.5 h-4.5 font-bold" />
-                          </button>
+                            <h4 className="font-extrabold text-[11px] sm:text-xs text-slate-900 truncate text-right">{prod.arabicName}</h4>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-blue-600 text-xs sm:text-sm font-black">{prod.price.toLocaleString()} ج.م</span>
+                              {prod.originalPrice && (
+                                <span className="text-slate-400 text-[9px] font-semibold line-through">{prod.originalPrice.toLocaleString()} ج.م</span>
+                              )}
+                            </div>
+                          </div>
 
                         </div>
                       );

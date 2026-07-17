@@ -4,6 +4,22 @@
   --font-sans: "Cairo", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
 }
 
+/* Smooth, non-janky scrolling on both the page and any inner scroll containers */
+html {
+  scroll-behavior: smooth;
+}
+html, body {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: none;
+}
+/* Any internally-scrollable panel (drawers, modals, dropdowns) should keep its
+   own scroll instead of "chaining" into the page behind it, which is a common
+   cause of scroll feeling like it randomly stops responding on mobile. */
+.no-scrollbar {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
 /* Glassmorphism custom classes with ultra-realistic 3D depth and light reflections */
 .glass-panel {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.32) 0%, rgba(255, 255, 255, 0.12) 100%);
@@ -82,9 +98,13 @@
     0 2px 8px 0 rgba(0, 0, 0, 0.02),
     inset 0 1.5px 2.5px 0 rgba(255, 255, 255, 0.75),
     inset 0 -1.5px 2px 0 rgba(255, 255, 255, 0.1);
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), background 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   overflow: hidden;
+  /* Give every card its own compositor layer up front so scrolling a grid full
+     of blurred cards doesn't force the browser to repaint blur regions live. */
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 .glass-card:hover {
@@ -152,11 +172,36 @@
 
 .animate-float {
   animation: float 6s ease-in-out infinite;
+  /* These float continuously for the entire session behind blurred glass
+     cards; without their own layer the browser keeps repainting everything
+     around them on every frame, which is a major source of scroll jank. */
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 .animate-float-delayed {
   animation: float-delayed 8s ease-in-out infinite;
+  will-change: transform;
+  transform: translateZ(0);
 }
+
+/* Cut the cost of frosted-glass blur on phones, where GPU compositing power
+   is limited and this is the biggest single cause of scroll hitching. */
+@media (max-width: 768px) {
+  .glass-card, .glass-panel, .glass-panel-dark, .glass-button, .glass-input {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+}
+
+/* Respect users who've asked their OS/browser to reduce motion, and also
+   stop purely-decorative infinite animations from competing with scrolling. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-float, .animate-float-delayed {
+    animation: none;
+  }
+}
+
 
 /* Water splatters or background decorations */
 .gradient-bg {
