@@ -2167,7 +2167,8 @@ export default function App() {
               </div>
 
               {/* 3. RIGHT COLUMN: Vertical Services List (lg:col-span-3) - Glass Panel from screenshot */}
-              <div className="lg:col-span-3 order-3">
+              {/* Hidden on mobile/tablet: this panel is re-rendered further down (after the categories row) for small screens */}
+              <div className="hidden lg:block lg:col-span-3 order-3">
                 <div className="glass-panel glass-shine rounded-3xl p-6 shadow-xl border border-white/45 flex flex-col justify-between h-full max-w-sm mx-auto">
                   
                   <div className="space-y-6">
@@ -2284,6 +2285,64 @@ export default function App() {
                     </div>
                   );
                 })}
+              </div>
+            </section>
+
+            {/* =========================================================================================
+                GUARANTEES PANEL (Mobile/Tablet only) - moved here per request so it appears below the
+                categories row instead of inside the hero, while staying above the rest of the page
+                (including the "عروض حصرية" footer card). Hidden on lg+ where the original hero panel shows.
+                ========================================================================================= */}
+            <section className="mb-12 lg:hidden">
+              <div className="glass-panel glass-shine rounded-3xl p-6 shadow-xl border border-white/45 flex flex-col justify-between max-w-sm mx-auto">
+
+                <div className="space-y-6">
+                  {GUARANTEES.map((g, idx) => {
+                    // Select matching icon
+                    let IconComponent = ShieldCheck;
+                    if (g.iconName === 'Truck') IconComponent = Truck;
+                    if (g.iconName === 'Lock') IconComponent = Lock;
+                    if (g.iconName === 'Headphones') IconComponent = Headphones;
+
+                    return (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between text-right gap-4 p-2 rounded-2xl hover:bg-white/20 transition-all duration-300 group cursor-pointer"
+                        onClick={() => {
+                          setActiveGuaranteeDot(idx);
+                          showToast(`ميزة ${g.title}: نحن نوفر لعملائنا الكرام ${g.description} لضمان أقصى درجات الرضا والأمان.`, 'info');
+                        }}
+                      >
+                        {/* Left: Glass icon box */}
+                        <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${g.color} flex items-center justify-center text-white shadow-md group-hover:scale-110 transition-transform duration-300`}>
+                          <IconComponent className="w-6 h-6" />
+                        </div>
+
+                        {/* Right: Text elements */}
+                        <div className="flex-1">
+                          <h4 className="font-extrabold text-base text-slate-900">{g.title}</h4>
+                          <p className="text-slate-500 text-xs font-semibold mt-0.5">{g.description}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Dot Indicators at bottom */}
+                <div className="flex justify-center items-center gap-2 mt-8 pt-4 border-t border-white/20">
+                  {[0, 1, 2, 3].map((dotIndex) => (
+                    <button
+                      key={dotIndex}
+                      onClick={() => setActiveGuaranteeDot(dotIndex)}
+                      className={`h-2.5 rounded-full transition-all duration-300 ${
+                        activeGuaranteeDot === dotIndex
+                          ? 'w-6 bg-blue-600 active-dot-glow'
+                          : 'w-2.5 bg-slate-400/50 hover:bg-slate-400'
+                      }`}
+                    />
+                  ))}
+                </div>
+
               </div>
             </section>
 
@@ -2425,9 +2484,6 @@ export default function App() {
               <span className="w-11 h-11 rounded-full bg-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300 p-1.5 border border-slate-100">
                 <img src={whatsappLogo} alt="WhatsApp" className="w-full h-full object-contain" />
               </span>
-              <span className="text-[11px] font-bold text-slate-500 group-hover:text-green-600 transition-colors" dir="ltr">
-                01061163091
-              </span>
             </a>
             <a
               href="mailto:abdallah666mo@gmail.com"
@@ -2435,9 +2491,6 @@ export default function App() {
             >
               <span className="w-11 h-11 rounded-full bg-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300 p-1.5 border border-slate-100">
                 <img src={gmailLogo} alt="Gmail" className="w-full h-full object-contain" />
-              </span>
-              <span className="text-[11px] font-bold text-slate-500 group-hover:text-blue-600 transition-colors" dir="ltr">
-                abdallah666mo@gmail.com
               </span>
             </a>
           </div>
