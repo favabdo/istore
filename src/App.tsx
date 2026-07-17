@@ -2,7 +2,6 @@ import React, { useState, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   ShoppingCart, 
-  Heart, 
   Search, 
   ShieldCheck, 
   Truck, 
@@ -228,6 +227,7 @@ export default function App() {
   const [adminPrice, setAdminPrice] = useState('');
   const [adminOriginalPrice, setAdminOriginalPrice] = useState('');
   const [adminCategory, setAdminCategory] = useState('iphone');
+  const [adminCondition, setAdminCondition] = useState<'new' | 'used'>('new');
   const [adminPresetImg, setAdminPresetImg] = useState('upload');
   const [adminCustomImg, setAdminCustomImg] = useState('');
   const [adminScreen, setAdminScreen] = useState('');
@@ -416,6 +416,7 @@ export default function App() {
         image: finalImage,
         images: finalImages,
         category: adminCategory,
+        condition: adminCondition,
         colors: productColors,
         specs: {
           screen: adminScreen.trim() || existing.specs?.screen || 'شاشة عالية الدقة',
@@ -447,6 +448,7 @@ export default function App() {
         image: finalImage,
         images: finalImages,
         category: adminCategory,
+        condition: adminCondition,
         rating: 5.0,
         reviewsCount: 1,
         colors: productColors,
@@ -479,6 +481,7 @@ export default function App() {
     setAdminSelectedColors(['Natural Titanium']);
     setAdminExtraImages([]);
     setAdminExtraUrlInput('');
+    setAdminCondition('new');
   };
 
   const handleStartEdit = (prod: Product) => {
@@ -488,6 +491,7 @@ export default function App() {
     setAdminPrice(prod.price.toString());
     setAdminOriginalPrice(prod.originalPrice ? prod.originalPrice.toString() : '');
     setAdminCategory(prod.category);
+    setAdminCondition(prod.condition === 'used' ? 'used' : 'new');
 
     if (prod.image.startsWith('data:') || prod.image.startsWith('http')) {
       setAdminCustomImg(prod.image);
@@ -519,6 +523,7 @@ export default function App() {
     setAdminPrice('');
     setAdminOriginalPrice('');
     setAdminCategory('iphone');
+    setAdminCondition('new');
     setAdminPresetImg('upload');
     setAdminCustomImg('');
     setAdminExtraImages([]);
@@ -630,10 +635,6 @@ export default function App() {
   // Cart States
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
-  
-  // Favorites State
-  const [favorites, setFavorites] = useState<string[]>(['iphone-15-pro-max']);
   
   // Product Detail Modal State
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -665,7 +666,7 @@ export default function App() {
   // Without this, the page behind a fixed overlay stays scrollable too, and on
   // mobile browsers (especially iOS Safari) that fight over which layer "owns"
   // the touch/scroll gesture is exactly what makes scrolling feel like it freezes.
-  const isAnyOverlayOpen = isCartOpen || isFavoritesOpen || !!selectedProduct || isVideoOpen;
+  const isAnyOverlayOpen = isCartOpen || !!selectedProduct || isVideoOpen;
   React.useEffect(() => {
     if (isAnyOverlayOpen) {
       const scrollY = window.scrollY;
@@ -706,15 +707,6 @@ export default function App() {
   const cartTotal = useMemo(() => {
     return cartItems.reduce((acc, item) => acc + ((item.product?.price ?? 0) * item.quantity), 0);
   }, [cartItems]);
-
-  // Toggle Favorite
-  const toggleFavorite = (productId: string) => {
-    if (favorites.includes(productId)) {
-      setFavorites(favorites.filter(id => id !== productId));
-    } else {
-      setFavorites([...favorites, productId]);
-    }
-  };
 
   // Add to Cart Handler
   const addToCart = (product: Product, colorName?: string) => {
@@ -769,6 +761,143 @@ export default function App() {
       }
       setChatMessages(prev => [...prev, { sender: 'support', text: reply }]);
     }, 1000);
+  };
+
+  // Reusable product card (used inside each category section on the homepage).
+  // Shows name, price, discount, and condition (new/used) BEFORE the shopper opens it.
+  const renderProductGridCard = (prod: Product) => {
+    const activeColorName = productCardColors[prod.id] || prod.colors[0]?.name || '';
+    const prodIndex = PRODUCTS.findIndex(p => p.id === prod.id);
+    const images = prod.images && prod.images.length > 0 ? prod.images : [prod.image];
+    const activeImg = getProductActiveImage(prod);
+
+    return (
+      <div 
+        key={prod.id}
+        className="glass-card glass-shine rounded-3xl overflow-hidden cursor-pointer flex flex-col justify-between h-[230px] md:h-[250px] border border-white/30 hover:border-white/60 shadow-md group relative"
+      >
+        {/* Condition badge (new/used) - Absolute Top Left, visible before opening */}
+        <span className={`absolute top-3 left-3 text-white font-extrabold text-[9px] px-2.5 py-1 rounded-full shadow-md z-10 ${
+          prod.condition === 'used' ? 'bg-amber-500' : 'bg-emerald-500'
+        }`}>
+          {prod.condition === 'used' ? 'مستعمل' : 'جديد'}
+        </span>
+
+        {/* Slice Image of Product cards from input_file_2.png or custom images */}
+        <div 
+          className="w-full flex-1 min-h-0 relative group/img overflow-hidden rounded-t-3xl"
+          onClick={() => {
+            setSelectedProduct(prod);
+            setModalColor(activeColorName);
+          }}
+        >
+          <img 
+            src={activeImg} 
+            alt={prod.arabicName}
+            className={`w-full h-full rounded-t-3xl transition-transform duration-500 group-hover:scale-105 ${
+              activeImg === "/input_file_2.png" ? 'object-cover' : 'object-contain bg-white/40'
+            }`}
+            style={activeImg === "/input_file_2.png" ? { 
+              objectPosition: `${prodIndex >= 0 ? prodIndex * 25 : 0}% center` 
+            } : {}}
+            referrerPolicy="no-referrer"
+          />
+
+          {images.length > 1 && (
+            <>
+              {/* Left Navigation Arrow */}
+              <button 
+                onClick={(e) => prevProductImage(prod, e)}
+                className="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white/80 hover:bg-white shadow-md flex items-center justify-center text-slate-800 hover:scale-110 transition-all z-20 opacity-0 group-hover/img:opacity-100"
+              >
+                <ArrowLeft className="w-3.5 h-3.5 font-bold" />
+              </button>
+              {/* Right Navigation Arrow */}
+              <button 
+                onClick={(e) => nextProductImage(prod, e)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white/80 hover:bg-white shadow-md flex items-center justify-center text-slate-800 hover:scale-110 transition-all z-20 opacity-0 group-hover/img:opacity-100"
+              >
+                <ArrowRight className="w-3.5 h-3.5 font-bold" />
+              </button>
+
+              {/* Dot Indicators */}
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-black/25 backdrop-blur-xs px-1.5 py-0.5 rounded-full z-20">
+                {images.map((_, i) => (
+                  <span 
+                    key={i} 
+                    className={`w-1 h-1 rounded-full transition-all ${
+                      (productImageIndices[prod.id] || 0) === i ? 'bg-white scale-125 w-1.5' : 'bg-white/50'
+                    }`}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* Interactive Overlay on hover for detailed specifications modal */}
+          <div className="absolute inset-0 bg-gradient-to-t from-blue-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4 pointer-events-none">
+            <span className="bg-white/95 backdrop-blur-md text-slate-800 text-[10px] font-bold px-3 py-1 rounded-full shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+              عرض المواصفات والسعر
+            </span>
+          </div>
+
+          {/* Interactive color circles overlay floating on the image */}
+          <div className="absolute bottom-2 right-2 flex items-center gap-1 z-10 bg-white/60 backdrop-blur-md px-2 py-1 rounded-full shadow-sm border border-white/30">
+            {prod.colors.slice(0, 4).map((col) => {
+              const isColorSelected = activeColorName === col.name;
+              return (
+                <button
+                  key={col.name}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setProductCardColors({
+                      ...productCardColors,
+                      [prod.id]: col.name
+                    });
+                  }}
+                  className={`w-3 h-3 rounded-full ${col.bgClass} transition-all duration-300 ${
+                    isColorSelected 
+                      ? 'ring-2 ring-blue-600 scale-125 shadow-sm' 
+                      : 'hover:scale-110 opacity-70'
+                  }`}
+                  title={col.name}
+                />
+              );
+            })}
+          </div>
+
+          {/* Instant Add-to-cart small button */}
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              addToCart(prod, activeColorName);
+            }}
+            className="absolute bottom-2 left-2 w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700 hover:scale-110 transition-all z-10 shadow-md"
+            title="أضف للسلة فوراً"
+          >
+            <Plus className="w-4 h-4 font-bold" />
+          </button>
+        </div>
+
+        {/* Name & price footer, visible on the closed card so shoppers know what they're about to open */}
+        <div 
+          className="px-3 py-2 flex flex-col gap-0.5 shrink-0"
+          dir="rtl"
+          onClick={() => {
+            setSelectedProduct(prod);
+            setModalColor(activeColorName);
+          }}
+        >
+          <h4 className="font-extrabold text-[11px] sm:text-xs text-slate-900 truncate text-right">{prod.arabicName}</h4>
+          <div className="flex items-center gap-1.5">
+            <span className="text-blue-600 text-xs sm:text-sm font-black">{prod.price.toLocaleString()} ج.م</span>
+            {prod.originalPrice && (
+              <span className="text-slate-400 text-[9px] font-semibold line-through">{prod.originalPrice.toLocaleString()} ج.م</span>
+            )}
+          </div>
+        </div>
+      </div>
+    );
   };
 
   if (storeLoading) {
@@ -896,20 +1025,6 @@ export default function App() {
                     </button>
                   )}
                 </div>
-
-                {/* Heart (Favorites) Badge */}
-                <button 
-                  onClick={() => setIsFavoritesOpen(true)}
-                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center hover:bg-white/30 text-slate-800 transition-colors relative"
-                  title="المفضلة"
-                >
-                  <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${favorites.length > 0 ? 'fill-rose-500 text-rose-500 scale-110' : ''} transition-all`} />
-                  {favorites.length > 0 && (
-                    <span className="absolute -top-0.5 -left-0.5 w-3 h-3 bg-rose-500 text-[7px] text-white font-bold flex items-center justify-center rounded-full">
-                      {favorites.length}
-                    </span>
-                  )}
-                </button>
 
                 {/* Shopping Cart Button */}
                 <button 
@@ -1042,7 +1157,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* Desktop Left Actions: Search Box, Favorite Heart, Cart Trigger (Hidden on Mobile) */}
+            {/* Desktop Left Actions: Search Box, Cart Trigger (Hidden on Mobile) */}
             <div className="hidden lg:flex items-center gap-1 sm:gap-1.5 flex-shrink-0 z-10">
               
               {/* Search Box */}
@@ -1064,20 +1179,6 @@ export default function App() {
                   </button>
                 )}
               </div>
-
-              {/* Heart (Favorites) Badge */}
-              <button 
-                onClick={() => setIsFavoritesOpen(true)}
-                className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center hover:bg-white/30 text-slate-800 transition-colors relative"
-                title="المفضلة"
-              >
-                <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${favorites.length > 0 ? 'fill-rose-500 text-rose-500 scale-110' : ''} transition-all`} />
-                {favorites.length > 0 && (
-                  <span className="absolute -top-0.5 -left-0.5 w-3 h-3 bg-rose-500 text-[7px] text-white font-bold flex items-center justify-center rounded-full">
-                    {favorites.length}
-                  </span>
-                )}
-              </button>
 
               {/* Shopping Cart Button */}
               <button 
@@ -1432,6 +1533,35 @@ export default function App() {
                         <option key={cat.id} value={cat.id}>{cat.arabicName}</option>
                       ))}
                     </select>
+                  </div>
+
+                  {/* Product Condition (New / Used) - shown on the card before opening it */}
+                  <div className="text-right">
+                    <label className="block text-xs font-bold text-slate-700 mb-1">حالة المنتج *</label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setAdminCondition('new')}
+                        className={`py-2.5 rounded-xl text-xs font-extrabold border transition-all ${
+                          adminCondition === 'new'
+                            ? 'bg-emerald-500 text-white border-emerald-500 shadow-sm'
+                            : 'bg-white/80 text-slate-600 border-slate-200 hover:border-emerald-300'
+                        }`}
+                      >
+                        جديد
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setAdminCondition('used')}
+                        className={`py-2.5 rounded-xl text-xs font-extrabold border transition-all ${
+                          adminCondition === 'used'
+                            ? 'bg-amber-500 text-white border-amber-500 shadow-sm'
+                            : 'bg-white/80 text-slate-600 border-slate-200 hover:border-amber-300'
+                        }`}
+                      >
+                        مستعمل
+                      </button>
+                    </div>
                   </div>
 
                   {/* Product Image Selection Mode */}
@@ -1818,7 +1948,6 @@ export default function App() {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6 font-sans">
                 {categorySortedAndFilteredProducts.map((prod) => {
-                  const isFav = favorites.includes(prod.id);
                   const activeColorName = productCardColors[prod.id] || prod.colors[0]?.name || '';
                   const prodIndex = PRODUCTS.findIndex(p => p.id === prod.id);
                   const images = prod.images && prod.images.length > 0 ? prod.images : [prod.image];
@@ -1829,17 +1958,6 @@ export default function App() {
                       key={prod.id}
                       className="glass-card glass-shine rounded-3xl overflow-hidden cursor-pointer flex flex-col justify-between h-[390px] border border-white/30 hover:border-white/60 shadow-md group relative"
                     >
-                      {/* Favorite button */}
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleFavorite(prod.id);
-                        }}
-                        className="absolute top-3 left-3 w-8 h-8 rounded-full bg-white/65 backdrop-blur-md flex items-center justify-center hover:bg-white hover:scale-115 transition-all z-10 border border-white/40 shadow-sm"
-                      >
-                        <Heart className={`w-4 h-4 ${isFav ? 'fill-rose-500 text-rose-500' : 'text-slate-600'}`} />
-                      </button>
-
                       {/* Product image */}
                       <div 
                         className="w-full h-56 relative overflow-hidden bg-slate-50/20 border-b border-white/10 group/img"
@@ -1891,11 +2009,13 @@ export default function App() {
                           </>
                         )}
                         
-                        {prod.isNew && (
-                          <span className="absolute top-3 right-3 bg-blue-600 text-white font-extrabold text-[9px] px-2.5 py-1 rounded-full shadow-md z-10">
-                            جديد
-                          </span>
-                        )}
+                        {/* Condition badge (new/used) - visible on the closed card so shoppers
+                            know exactly what they're about to open */}
+                        <span className={`absolute top-3 right-3 text-white font-extrabold text-[9px] px-2.5 py-1 rounded-full shadow-md z-10 ${
+                          prod.condition === 'used' ? 'bg-amber-500' : 'bg-emerald-500'
+                        }`}>
+                          {prod.condition === 'used' ? 'مستعمل' : 'جديد'}
+                        </span>
 
                         {/* Hover overlay */}
                         <div className="absolute inset-0 bg-gradient-to-t from-blue-900/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4 pointer-events-none">
@@ -2160,34 +2280,14 @@ export default function App() {
             </section>
 
             {/* =========================================================================================
-                BEST SELLERS SECTION (Matches input_file_2.png Exactly, using Slicing)
+                CATEGORY PRODUCT SECTIONS
+                Each category (iPhone, Accessories, Watch, ...) gets its own row here, and any
+                product added by the admin automatically lands in the section matching its
+                category field - nothing gets dumped into one generic "best sellers" list.
                 ========================================================================================= */}
-            <section id="bestsellers" className="mb-12">
-              
-              {/* Header row: Title + Pulse + Show All Link */}
-              <div className="flex items-center justify-between mb-6">
-                
-                <div className="flex items-center gap-3">
-                  <span className="bg-blue-100 text-blue-600 p-1.5 rounded-xl animate-pulse">
-                    {/* Heartbeat/Trend SVG line inside custom styling */}
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                  </span>
-                  <h2 className="text-2xl font-black text-slate-900 tracking-tight">الأكثر مبيعاً</h2>
-                </div>
-
-                <button 
-                  onClick={() => setSelectedCategory(null)}
-                  className="text-blue-600 font-bold text-sm flex items-center gap-1.5 hover:gap-3 transition-all duration-300 hover:underline cursor-pointer"
-                >
-                  <span>عرض الكل</span>
-                  <ArrowLeft className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Grid Layout of Product Cards (Matches input_file_2.png cards) */}
-              {filteredProducts.length === 0 ? (
+            <div id="bestsellers">
+            {filteredProducts.length === 0 ? (
+              <section className="mb-12">
                 <div className="glass-panel rounded-3xl p-12 text-center border border-white/30" dir="rtl">
                   <p className="text-slate-600 font-bold text-lg">لم يتم العثور على أي منتجات مطابقة لعملية البحث.</p>
                   <button 
@@ -2197,168 +2297,47 @@ export default function App() {
                     إعادة ضبط البحث
                   </button>
                 </div>
-              ) : (
-                <div className="relative">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                    {allProducts.map((prod) => {
-                      // Skip if filtered out
-                      const isVisible = filteredProducts.some(fp => fp.id === prod.id);
-                      if (!isVisible) return null;
+              </section>
+            ) : (
+              CATEGORIES.map((cat) => {
+                const catProducts = filteredProducts.filter(p => p.category === cat.id);
+                if (catProducts.length === 0) return null;
 
-                      const isFav = favorites.includes(prod.id);
-                      const activeColorName = productCardColors[prod.id] || prod.colors[0]?.name || '';
-                      const prodIndex = PRODUCTS.findIndex(p => p.id === prod.id);
-                      const images = prod.images && prod.images.length > 0 ? prod.images : [prod.image];
-                      const activeImg = getProductActiveImage(prod);
+                return (
+                  <section key={cat.id} id={`section-${cat.id}`} className="mb-12">
 
-                      return (
-                        <div 
-                          key={prod.id}
-                          className="glass-card glass-shine rounded-3xl overflow-hidden cursor-pointer flex flex-col justify-between h-[230px] md:h-[250px] border border-white/30 hover:border-white/60 shadow-md group relative"
-                        >
-                          {/* Favorite button (Absolute Top Left) */}
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleFavorite(prod.id);
-                            }}
-                            className="absolute top-3 left-3 w-8 h-8 rounded-full bg-white/65 backdrop-blur-md flex items-center justify-center hover:bg-white hover:scale-115 transition-all z-10 border border-white/40 shadow-sm"
-                          >
-                            <Heart className={`w-4 h-4 ${isFav ? 'fill-rose-500 text-rose-500' : 'text-slate-600'}`} />
-                          </button>
+                    {/* Header row: Category Title + Pulse + Show All Link */}
+                    <div className="flex items-center justify-between mb-6">
 
-                          {/* Slice Image of Product cards from input_file_2.png or custom images */}
-                          <div 
-                            className="w-full flex-1 min-h-0 relative group/img overflow-hidden rounded-t-3xl"
-                            onClick={() => {
-                              setSelectedProduct(prod);
-                              setModalColor(activeColorName);
-                            }}
-                          >
-                            <img 
-                              src={activeImg} 
-                              alt={prod.arabicName}
-                              className={`w-full h-full rounded-t-3xl transition-transform duration-500 group-hover:scale-105 ${
-                                activeImg === "/input_file_2.png" ? 'object-cover' : 'object-contain bg-white/40'
-                              }`}
-                              style={activeImg === "/input_file_2.png" ? { 
-                                objectPosition: `${prodIndex >= 0 ? prodIndex * 25 : 0}% center` 
-                              } : {}}
-                              referrerPolicy="no-referrer"
-                            />
+                      <div className="flex items-center gap-3">
+                        <span className="bg-blue-100 text-blue-600 p-1.5 rounded-xl animate-pulse">
+                          {/* Heartbeat/Trend SVG line inside custom styling */}
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                        </span>
+                        <h2 className="text-2xl font-black text-slate-900 tracking-tight">{cat.arabicName}</h2>
+                      </div>
 
-                            {images.length > 1 && (
-                              <>
-                                {/* Left Navigation Arrow */}
-                                <button 
-                                  onClick={(e) => prevProductImage(prod, e)}
-                                  className="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white/80 hover:bg-white shadow-md flex items-center justify-center text-slate-800 hover:scale-110 transition-all z-20 opacity-0 group-hover/img:opacity-100"
-                                >
-                                  <ArrowLeft className="w-3.5 h-3.5 font-bold" />
-                                </button>
-                                {/* Right Navigation Arrow */}
-                                <button 
-                                  onClick={(e) => nextProductImage(prod, e)}
-                                  className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white/80 hover:bg-white shadow-md flex items-center justify-center text-slate-800 hover:scale-110 transition-all z-20 opacity-0 group-hover/img:opacity-100"
-                                >
-                                  <ArrowRight className="w-3.5 h-3.5 font-bold" />
-                                </button>
+                      <button 
+                        onClick={() => setSelectedCategory(cat.id)}
+                        className="text-blue-600 font-bold text-sm flex items-center gap-1.5 hover:gap-3 transition-all duration-300 hover:underline cursor-pointer"
+                      >
+                        <span>عرض الكل</span>
+                        <ArrowLeft className="w-4 h-4" />
+                      </button>
+                    </div>
 
-                                {/* Dot Indicators */}
-                                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-black/25 backdrop-blur-xs px-1.5 py-0.5 rounded-full z-20">
-                                  {images.map((_, i) => (
-                                    <span 
-                                      key={i} 
-                                      className={`w-1 h-1 rounded-full transition-all ${
-                                        (productImageIndices[prod.id] || 0) === i ? 'bg-white scale-125 w-1.5' : 'bg-white/50'
-                                      }`}
-                                    />
-                                  ))}
-                                </div>
-                              </>
-                            )}
+                    {/* Grid Layout of Product Cards for this category */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                      {catProducts.map((prod) => renderProductGridCard(prod))}
+                    </div>
 
-                            {/* Interactive Overlay on hover for detailed specifications modal */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-blue-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4 pointer-events-none">
-                              <span className="bg-white/95 backdrop-blur-md text-slate-800 text-[10px] font-bold px-3 py-1 rounded-full shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                                عرض المواصفات والسعر
-                              </span>
-                            </div>
-
-                            {/* Interactive color circles overlay floating on the image */}
-                            <div className="absolute bottom-2 right-2 flex items-center gap-1 z-10 bg-white/60 backdrop-blur-md px-2 py-1 rounded-full shadow-sm border border-white/30">
-                              {prod.colors.slice(0, 4).map((col) => {
-                                const isColorSelected = activeColorName === col.name;
-                                return (
-                                  <button
-                                    key={col.name}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setProductCardColors({
-                                        ...productCardColors,
-                                        [prod.id]: col.name
-                                      });
-                                    }}
-                                    className={`w-3 h-3 rounded-full ${col.bgClass} transition-all duration-300 ${
-                                      isColorSelected 
-                                        ? 'ring-2 ring-blue-600 scale-125 shadow-sm' 
-                                        : 'hover:scale-110 opacity-70'
-                                    }`}
-                                    title={col.name}
-                                  />
-                                );
-                              })}
-                            </div>
-
-                            {/* Instant Add-to-cart small button */}
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                addToCart(prod, activeColorName);
-                              }}
-                              className="absolute bottom-2 left-2 w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700 hover:scale-110 transition-all z-10 shadow-md"
-                              title="أضف للسلة فوراً"
-                            >
-                              <Plus className="w-4 h-4 font-bold" />
-                            </button>
-                          </div>
-
-                          {/* Name & price footer, visible on the closed card so shoppers know what they're about to open */}
-                          <div 
-                            className="px-3 py-2 flex flex-col gap-0.5 shrink-0"
-                            dir="rtl"
-                            onClick={() => {
-                              setSelectedProduct(prod);
-                              setModalColor(activeColorName);
-                            }}
-                          >
-                            <h4 className="font-extrabold text-[11px] sm:text-xs text-slate-900 truncate text-right">{prod.arabicName}</h4>
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-blue-600 text-xs sm:text-sm font-black">{prod.price.toLocaleString()} ج.م</span>
-                              {prod.originalPrice && (
-                                <span className="text-slate-400 text-[9px] font-semibold line-through">{prod.originalPrice.toLocaleString()} ج.م</span>
-                              )}
-                            </div>
-                          </div>
-
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Slider Side Arrow Indicator */}
-                  <div className="absolute top-1/2 left-[-16px] transform -translate-y-1/2 z-10 hidden xl:block">
-                    <button 
-                      onClick={() => showToast('تم استعراض جميع المنتجات المميزة بالكامل!', 'info')}
-                      className="w-12 h-12 rounded-full bg-white/90 backdrop-blur-md border border-white/50 shadow-lg flex items-center justify-center text-slate-800 hover:bg-white hover:scale-110 transition-all cursor-pointer"
-                    >
-                      <ArrowLeft className="w-5 h-5 font-bold" />
-                    </button>
-                  </div>
-                </div>
-              )}
-
-            </section>
+                  </section>
+                );
+              })
+            )}
+            </div>
           </>
         )}
 
@@ -2544,81 +2523,6 @@ export default function App() {
       )}
 
       {/* =========================================================================================
-          SLIDING SIDE FAVORITES DRAWER (same experience as the cart drawer)
-          ========================================================================================= */}
-      {isFavoritesOpen && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 transition-opacity flex justify-end">
-          <div 
-            className="w-full max-w-md h-full bg-white/80 backdrop-blur-xl border-r border-white/20 shadow-2xl p-6 flex flex-col overflow-hidden"
-            dir="rtl"
-          >
-            <div className="flex items-center justify-between pb-4 border-b border-slate-200 flex-shrink-0">
-              <div className="flex items-center gap-2">
-                <Heart className="w-6 h-6 fill-rose-500 text-rose-500" />
-                <h3 className="font-black text-xl text-slate-900">قائمة المفضلة</h3>
-              </div>
-              <button 
-                onClick={() => setIsFavoritesOpen(false)}
-                className="w-8 h-8 rounded-full hover:bg-slate-200/50 flex items-center justify-center text-slate-600 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {(() => {
-              const favoriteProducts = allProducts.filter(p => favorites.includes(p.id));
-              return favoriteProducts.length === 0 ? (
-                <div className="flex-1 flex flex-col items-center justify-center text-center">
-                  <Heart className="w-16 h-16 text-slate-300 mb-4" />
-                  <p className="text-slate-500 font-bold">قائمة المفضلة فارغة حالياً</p>
-                  <button 
-                    onClick={() => setIsFavoritesOpen(false)}
-                    className="mt-4 bg-blue-600 text-white font-bold text-xs px-6 py-2.5 rounded-xl hover:bg-blue-700 transition-colors"
-                  >
-                    متابعة التسوق
-                  </button>
-                </div>
-              ) : (
-                <div className="flex-1 min-h-0 space-y-4 mt-6 overflow-y-auto no-scrollbar pr-1">
-                  {favoriteProducts.map(product => (
-                      <div 
-                        key={product.id}
-                        className="glass-panel rounded-2xl p-4 flex items-center justify-between gap-4 border border-slate-100"
-                      >
-                        <div className="w-16 h-16 rounded-xl bg-slate-100/60 overflow-hidden relative border border-slate-200 flex items-center justify-center">
-                          <img src={product.image} alt={product.name} className="w-12 h-12 object-cover" />
-                        </div>
-
-                        <div className="flex-1 text-right">
-                          <h4 className="font-extrabold text-sm text-slate-900">{product.arabicName}</h4>
-                          <p className="text-blue-600 text-xs font-black mt-1">{product.price.toLocaleString()} EGP</p>
-                        </div>
-
-                        <div className="flex flex-col items-end gap-2">
-                          <button 
-                            onClick={() => { addToCart(product); setIsFavoritesOpen(false); setIsCartOpen(true); }}
-                            className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] px-3 py-2 rounded-lg transition-colors"
-                          >
-                            أضف للسلة
-                          </button>
-                          <button 
-                            onClick={() => toggleFavorite(product.id)}
-                            className="text-rose-500 hover:text-rose-600 font-bold text-[10px] flex items-center gap-0.5"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                            <span>إزالة</span>
-                          </button>
-                        </div>
-                      </div>
-                  ))}
-                </div>
-              );
-            })()}
-          </div>
-        </div>
-      )}
-
-      {/* =========================================================================================
           DETAILED SPECIFICATIONS MODAL
           ========================================================================================= */}
       {selectedProduct && (
@@ -2766,15 +2670,6 @@ export default function App() {
                   >
                     <ShoppingCart className="w-5 h-5" />
                     <span>إضافة لحقيبة التسوق</span>
-                  </button>
-
-                  <button 
-                    onClick={() => {
-                      toggleFavorite(selectedProduct.id);
-                    }}
-                    className="w-14 rounded-2xl border border-slate-200 hover:bg-slate-50 flex items-center justify-center text-slate-600 transition-colors"
-                  >
-                    <Heart className={`w-6 h-6 ${favorites.includes(selectedProduct.id) ? 'fill-rose-500 text-rose-500' : ''}`} />
                   </button>
                 </div>
 

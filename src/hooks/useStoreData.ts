@@ -18,6 +18,7 @@ function mapProductRow(row: any): Product {
     rating: row.rating != null ? Number(row.rating) : 5,
     reviewsCount: row.reviews_count ?? 0,
     isNew: row.is_new ?? false,
+    condition: row.condition === 'used' ? 'used' : 'new',
     specs: row.specs ?? { screen: '', processor: '', camera: '', battery: '' },
   };
 }
