@@ -140,6 +140,20 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [categorySort, setCategorySort] = useState('default');
 
+  // Ref to the single element that owns scrolling for the whole app (see .app-scroll in index.css)
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const scrollToTop = () => {
+    scrollContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  // Selecting a category (from the top Dynamic Island nav OR the category cards
+  // on the home page OR a "show all" link) is one and the same action: it should
+  // always land on the exact same category page AND bring the user to the top
+  // of it, so the Dynamic Island nav visibly reflects the selection.
+  const goToCategory = (id: string | null) => {
+    setSelectedCategory(id);
+    scrollToTop();
+  };
+
   // Live product & category data coming from Supabase (shared with the admin app)
   const { products: PRODUCTS, categories: fetchedCategories, loading: storeLoading, error: storeError } = useStoreData();
   // Until the admin adds categories in Supabase, keep showing the original category images/section
@@ -204,21 +218,22 @@ export default function App() {
     return filtered.map(p => editedProducts[p.id] ? { ...p, ...editedProducts[p.id] } : p);
   }, [PRODUCTS, customProducts, deletedProductIds, editedProducts]);
 
-  // Navigation items definition
+  // Navigation items definition - built from CATEGORIES so every section on
+  // the page (not just a hardcoded few) has a matching entry up top, and any
+  // category added later from the admin dashboard shows up here automatically.
   const navItems = [
-    { id: 'home', label: 'الرئيسية', action: () => { setActiveTab('home'); setSelectedCategory(null); } },
-    { id: 'iphone', label: 'ايفون', action: () => { setActiveTab('home'); setSelectedCategory('iphone'); } },
-    { id: 'accessories', label: 'سماعات', action: () => { setActiveTab('home'); setSelectedCategory('accessories'); } },
-    { id: 'watch', label: 'ساعات', action: () => { setActiveTab('home'); setSelectedCategory('watch'); } },
+    { id: 'home', label: 'الرئيسية', action: () => { setActiveTab('home'); goToCategory(null); } },
+    ...CATEGORIES.map(cat => ({
+      id: cat.id,
+      label: cat.arabicName,
+      action: () => { setActiveTab('home'); goToCategory(cat.id); },
+    })),
   ];
 
   const isTabActive = (id: string) => {
     if (id === 'home') return activeTab === 'home' && !selectedCategory;
-    if (id === 'iphone') return selectedCategory === 'iphone';
-    if (id === 'accessories') return selectedCategory === 'accessories';
-    if (id === 'watch') return selectedCategory === 'watch';
     if (id === 'admin') return activeTab === 'admin';
-    return false;
+    return selectedCategory === id;
   };
 
   // Admin Panel Form States
@@ -662,9 +677,6 @@ export default function App() {
   // Video Playing Overlay state
   const [isVideoOpen, setIsVideoOpen] = useState(false);
 
-  // Ref to the single element that owns scrolling for the whole app (see .app-scroll in index.css)
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-
   // Lock the app's scroll container whenever any overlay/modal/drawer is open,
   // so the page behind a fixed overlay can't scroll too. Since this is a plain
   // div (not <body>), toggling its overflow is enough — no iOS position-fixed
@@ -1062,7 +1074,7 @@ export default function App() {
                   }`}
                   style={{
                     borderRadius: isIslandOpen ? "22px" : "9999px",
-                    maxWidth: isIslandOpen ? "720px" : "135px",
+                    maxWidth: isIslandOpen ? "860px" : "135px",
                   }}
                 >
                   <AnimatePresence mode="wait" initial={false}>
@@ -2221,7 +2233,7 @@ export default function App() {
                     <div
                       key={cat.id}
                       onClick={() => {
-                        setSelectedCategory(selectedCategory === cat.id ? null : cat.id);
+                        goToCategory(selectedCategory === cat.id ? null : cat.id);
                       }}
                       className="flex flex-col gap-2.5 cursor-pointer group select-none"
                     >
@@ -2314,7 +2326,7 @@ export default function App() {
                       </div>
 
                       <button 
-                        onClick={() => setSelectedCategory(cat.id)}
+                        onClick={() => goToCategory(cat.id)}
                         className="text-blue-600 font-bold text-sm flex items-center gap-1.5 hover:gap-3 transition-all duration-300 hover:underline cursor-pointer"
                       >
                         <span>عرض الكل</span>
